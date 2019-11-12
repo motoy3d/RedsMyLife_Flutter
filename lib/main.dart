@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:redsmylife/tabs/news.dart';
-import 'package:redsmylife/tabs/results.dart';
+import 'package:redsmylife/tabs/games.dart';
 import 'package:redsmylife/tabs/standings.dart';
 import 'package:redsmylife/tabs/twitter.dart';
 import 'package:redsmylife/tabs/players.dart';
@@ -60,7 +60,7 @@ class MainState extends State<Main> with SingleTickerProviderStateMixin {
       // Set the TabBar view as the body of the Scaffold
       body: TabBarView(
         // Add tabs as widgets
-        children: <Widget>[NewsTab(), ResultsTab(), StandingsTab(), 
+        children: <Widget>[NewsTab(), GamesTab(), StandingsTab(), 
           TwitterTab(), PlayersTab()],
         // set the controller
         controller: controller,

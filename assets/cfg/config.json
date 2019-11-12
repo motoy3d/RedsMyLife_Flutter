@@ -18,7 +18,7 @@
     "dbName": "urawareds.my.life",
     "urlBase": "https://smartj.mobi/redsmylife/",
     "feedUrlBase": "https://smartj.mobi/redsmylife/news.json",
-    "resultsUrl": "https://smartj.mobi/redsmylife/results.json",
+    "gamesUrl": "https://smartj.mobi/redsmylife/results.json",
     "standingsUrl": "https://smartj.mobi/redsmylife/standings.json",
     "messageUrl": "https://smartj.mobi/redsmylife/config.json",
     "videoUrl": "https://smartj.mobi/redsmylife/video.json",

@@ -59,10 +59,10 @@ class StandingsPageState extends State<StandingsPage> with AutomaticKeepAliveCli
 
   // APIからデータ取得
   Future<String> getStandings(compe) async {
-    var year = DateTime.now().month == 1? DateTime.now().year-1 : DateTime.now().year;
+    var season = DateTime.now().month == 1? DateTime.now().year-1 : DateTime.now().year;
     var url = Uri.encodeFull(GlobalConfiguration().getString("standingsUrl"))
       + "?teamId=" + GlobalConfiguration().getString("teamId")
-      + "&season=" + year.toString();
+      + "&season=" + season.toString();
     if (compe == null) {
         compe = "J";
     }
