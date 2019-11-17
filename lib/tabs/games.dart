@@ -3,72 +3,26 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
-import "package:intl/intl.dart";
 import 'package:redsmylife/utils.dart';
 import 'dart:convert';
 
 /*
  * 日程タブ
  */
-class GamesTab extends StatelessWidget {
+class GamesTab extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(int.parse(GlobalConfiguration().getString("mainColor"))),
-        // Set the TabBar view as the body of the Scaffold
-        title: Text('日程', 
-          style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
-        actions: [Padding(padding: EdgeInsets.fromLTRB(0, 0, 20, 0), 
-          child: IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () {
-              
-            })
-          )]
-      ),
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: MasterDetailContainer()
-      )
-    );
-  }
-}
-
-/*
- * コンテナ
- */
-class MasterDetailContainer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            child: MasterPage())
-        ],
-      ));
-  }
-}
-
-class MasterPage extends StatefulWidget {
-  @override
-  MasterPageState createState() => MasterPageState();
+  GamesTabState createState() => GamesTabState();
 }
 
 const double _ROW_HEIGHT = 165.0;
-class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMixin<MasterPage> {
+class GamesTabState extends State<GamesTab> with AutomaticKeepAliveClientMixin<GamesTab> {
   @override
   bool get wantKeepAlive => true;
   List games = List();
   dynamic selectedGame;
   ScrollController controller;
   ListView listView;
+  int lastGameIndex = 0;
 
   // APIから日程データ取得
   Future<String> getGames() async {
@@ -81,7 +35,14 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
     // log(response.body);
     setState(() {
       games = json.decode(response.body);
-      controller.animateTo(30 * _ROW_HEIGHT, duration: new Duration(seconds: 2), curve: Curves.ease);
+      log("setState... games.length=" + games.length.toString());
+      for (var idx=0; idx<games.length; idx++) {
+        if (games[idx]["score"] == null) {
+          lastGameIndex = idx;
+        }
+      }
+      controller.animateTo(lastGameIndex * _ROW_HEIGHT, 
+        duration: new Duration(seconds: 1), curve: Curves.ease);
     });
     return "Successfull";
   }
@@ -98,12 +59,16 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
       itemBuilder: (context, index) {
         var game = games[index];
         var resultImage;
-        if("○" == game["result"] || "◯" == game["result"]) {
-          resultImage = "win.png";
-        } else if("△" == game["result"]) {
-          resultImage = "draw.png";
+        if (game["score"] != null) {
+          if("○" == game["result"] || "◯" == game["result"]) {
+            resultImage = "win.png";
+          } else if("△" == game["result"]) {
+            resultImage = "draw.png";
+          } else {
+            resultImage = "lose.png";
+          }
         } else {
-          resultImage = "lose.png";
+          lastGameIndex = index;
         }
         // 各試合のボタン
         var buttons = <Widget>[];
@@ -131,8 +96,7 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
               if (game["detail_url"] != null) {
                 Utils.openWeb(game["detail_url"]);
               }
-            },
-            ),
+            },),
           ),
         );
         buttons.add(ButtonTheme(
@@ -142,6 +106,8 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
             color: Colors.white30,
             child: Text("動画検索"),
             onPressed: () {
+              if (game["detail_url"] != null) {
+              }
             },
             ),
           ),
@@ -174,14 +140,14 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
                 alignment: Alignment.centerLeft,
                 child: Text(
                   game["game_date2"] + "  " + game["kickoff_time"] + " " + game["stadium"], 
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                   textAlign: TextAlign.start,),
               ),
               // 試合名
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(game["compe"], 
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                   textAlign: TextAlign.start,),
               ),
               // 対戦相手、スコア
@@ -206,26 +172,27 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
                   )
                 ),
             ]),
-          // onTap: () {
-          //   setState(() {
-          //     selectedGame = game;
-          //     log("selected = " + selectedGame.toString());
-
-          //     // To remove the previously selected detail page
-          //     while (Navigator.of(context).canPop()) {
-          //       Navigator.of(context).pop();
-          //     }
-          //     Navigator.of(context)
-          //         .push(DetailRoute(builder: (context) {
-          //       return DetailPage(feed: selectedGame);
-          //     }));
-          //   });
-          // }
           );
       });
-    return Container(
-      color: Colors.black,
-      child: listView
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(int.parse(GlobalConfiguration().getString("mainColor"))),
+        title: Text('日程', 
+          style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
+        actions: [Padding(padding: EdgeInsets.fromLTRB(0, 0, 10, 0), 
+          child: IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              getGames();
+            })
+          )]
+      ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Container(color: Colors.black, child: listView),
+      )
     );
   }
   

@@ -6,53 +6,12 @@ import 'package:global_configuration/global_configuration.dart';
 import 'dart:convert';
 import 'package:redsmylife/standings_table.dart';
 
-class StandingsTab extends StatelessWidget {
+class StandingsTab extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(int.parse(GlobalConfiguration().getString("mainColor"))),
-        // Set the TabBar view as the body of the Scaffold
-        title: Text('順位表', 
-          style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
-        leading: Icon(Icons.sort),
-        actions: [Icon(Icons.refresh)]
-      ),
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: StandingsContainer()
-      )
-    );
-  }
+  StandingsTabState createState() => StandingsTabState();
 }
 
-/*
- * コンテナ
- */
-class StandingsContainer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            child: StandingsPage())
-        ],
-      ));
-  }
-}
-
-class StandingsPage extends StatefulWidget {
-  @override
-  StandingsPageState createState() => StandingsPageState();
-}
-
-class StandingsPageState extends State<StandingsPage> with AutomaticKeepAliveClientMixin<StandingsPage> {
+class StandingsTabState extends State<StandingsTab> with AutomaticKeepAliveClientMixin<StandingsTab> {
   @override
   bool get wantKeepAlive => true;
   List standings = List();
@@ -116,14 +75,43 @@ class StandingsPageState extends State<StandingsPage> with AutomaticKeepAliveCli
           ),
         ).toList()
     );
-    return Container(
-      color: Colors.black,
-      // padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: dataTable
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(int.parse(GlobalConfiguration().getString("mainColor"))),
+        // Set the TabBar view as the body of the Scaffold
+        title: Text('順位表', 
+          style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
+        leading: Icon(Icons.sort),
+        actions: [Padding(padding: EdgeInsets.fromLTRB(0, 0, 10, 0), 
+          child: IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              
+            })
+          )]
+      ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Container(
+          color: Colors.black, 
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: dataTable
+          )
+        )
       )
     );
+
+    // return Container(
+    //   color: Colors.black,
+    //   // padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+    //   child: SingleChildScrollView(
+    //     scrollDirection: Axis.vertical,
+    //     child: dataTable
+    //   )
+    // );
   }
   
   @override
