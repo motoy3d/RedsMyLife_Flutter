@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import "package:intl/intl.dart";
+import 'package:redsmylife/utils.dart';
 import 'dart:convert';
-import 'package:webview_flutter/webview_flutter.dart';
 
 /*
  * 日程タブ
@@ -19,7 +19,13 @@ class GamesTab extends StatelessWidget {
         // Set the TabBar view as the body of the Scaffold
         title: Text('日程', 
           style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
-        actions: [Icon(Icons.refresh)]
+        actions: [Padding(padding: EdgeInsets.fromLTRB(0, 0, 20, 0), 
+          child: IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              
+            })
+          )]
       ),
       body: SafeArea(
         top: false,
@@ -55,11 +61,14 @@ class MasterPage extends StatefulWidget {
   MasterPageState createState() => MasterPageState();
 }
 
+const double _ROW_HEIGHT = 165.0;
 class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMixin<MasterPage> {
   @override
   bool get wantKeepAlive => true;
   List games = List();
   dynamic selectedGame;
+  ScrollController controller;
+  ListView listView;
 
   // APIから日程データ取得
   Future<String> getGames() async {
@@ -72,6 +81,7 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
     // log(response.body);
     setState(() {
       games = json.decode(response.body);
+      controller.animateTo(30 * _ROW_HEIGHT, duration: new Duration(seconds: 2), curve: Curves.ease);
     });
     return "Successfull";
   }
@@ -79,101 +89,150 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    controller = ScrollController();
+    log("build ------- ");
+    listView = ListView.separated(
+      separatorBuilder: (context, index) => Divider(color: Colors.grey),
+      itemCount: games.length,
+      controller: controller,
+      itemBuilder: (context, index) {
+        var game = games[index];
+        var resultImage;
+        if("○" == game["result"] || "◯" == game["result"]) {
+          resultImage = "win.png";
+        } else if("△" == game["result"]) {
+          resultImage = "draw.png";
+        } else {
+          resultImage = "lose.png";
+        }
+        // 各試合のボタン
+        var buttons = <Widget>[];
+        if (game["ticket_url"] != null) {
+          buttons.add(ButtonTheme(
+            minWidth: 100.0,
+            height: 44.0,
+            child: FlatButton(
+              color: Colors.white30,
+              child: Text("チケット"),
+              onPressed: () {
+                Utils.openWeb(game["ticket_url"]);
+              },
+              ),
+            ),
+          );
+        }
+        buttons.add(ButtonTheme(
+          minWidth: 100.0,
+          height: 44.0,
+          child: FlatButton(
+            color: Colors.white30,
+            child: Text("試合詳細"),
+            onPressed: () {
+              if (game["detail_url"] != null) {
+                Utils.openWeb(game["detail_url"]);
+              }
+            },
+            ),
+          ),
+        );
+        buttons.add(ButtonTheme(
+          minWidth: 100.0,
+          height: 44.0,
+          child: FlatButton(
+            color: Colors.white30,
+            child: Text("動画検索"),
+            onPressed: () {
+            },
+            ),
+          ),
+        );
+        //　スコア
+        var scoreLabel = Align();
+        if (game["score"] != null) {
+          scoreLabel = Align(
+            child: Row(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 6, 0),
+                  child: Image.asset("assets/images/" + resultImage, width: 28,)
+                ),
+                Text(game["score"], 
+                  style: TextStyle(color: Colors.white, fontSize: 28),
+                  textAlign: TextAlign.end,
+                )
+              ],)
+            );
+        }
+
+        return Container(
+          padding: EdgeInsets.fromLTRB(10, 0, 15, 0),
+          height: _ROW_HEIGHT,
+          child: Column(
+            children: [
+              // 日時・大会・スタジアム
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  game["game_date2"] + "  " + game["kickoff_time"] + " " + game["stadium"], 
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  textAlign: TextAlign.start,),
+              ),
+              // 試合名
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(game["compe"], 
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  textAlign: TextAlign.start,),
+              ),
+              // 対戦相手、スコア
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children:[
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("vs " + game["vs_team"], 
+                        style: TextStyle(color: Colors.white, fontSize: 24)),
+                      )
+                  ),
+                  scoreLabel,
+                ]
+              ),
+              // 試合詳細ボタン、動画検索ボタン
+              Align(
+                alignment: Alignment.centerRight,
+                child: ButtonBar(
+                  children: buttons,
+                  )
+                ),
+            ]),
+          // onTap: () {
+          //   setState(() {
+          //     selectedGame = game;
+          //     log("selected = " + selectedGame.toString());
+
+          //     // To remove the previously selected detail page
+          //     while (Navigator.of(context).canPop()) {
+          //       Navigator.of(context).pop();
+          //     }
+          //     Navigator.of(context)
+          //         .push(DetailRoute(builder: (context) {
+          //       return DetailPage(feed: selectedGame);
+          //     }));
+          //   });
+          // }
+          );
+      });
     return Container(
       color: Colors.black,
-      child: ListView.separated(
-        separatorBuilder: (context, index) => Divider(color: Colors.grey),
-        itemCount: games.length,
-        itemBuilder: (context, index) {
-          var game = games[index];
-          return Container(
-            padding: EdgeInsets.fromLTRB(10, 0, 15, 0),
-            child: Column(
-              children: [
-                // 日時・大会・スタジアム
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    game["game_date2"] + "  " + game["kickoff_time"] + " " + game["stadium"], 
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                    textAlign: TextAlign.start,),
-                ),
-                // 試合名
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(game["compe"], 
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                    textAlign: TextAlign.start,),
-                ),                
-                // 対戦相手、スコア
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children:[
-                    Flexible(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("vs " + game["vs_team"], 
-                          style: TextStyle(color: Colors.white, fontSize: 24)),
-                        )
-                    ),
-                    Align(
-                      child: Row(
-                        children: <Widget>[
-                          Image.asset("assets/images/win.png", width: 28,),
-                          Text(game["score"], 
-                            style: TextStyle(color: Colors.white, fontSize: 28),
-                            textAlign: TextAlign.end,
-                          )
-
-                        ]
-                        ,)
-                      ),
-                  ]
-                ),
-                // 試合詳細ボタン、動画検索ボタン
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ButtonBar(
-                    children: <Widget>[
-                      FlatButton(
-                        color: Colors.white30,
-                        child: Text("試合詳細"),
-                        onPressed: () {
-                        },
-                        ),
-                      FlatButton(
-                        color: Colors.white30,
-                        child: Text("動画検索"),
-                        onPressed: () {
-                        },
-                        ),
-                    ],
-                  )
-                  ),
-              ]),
-            // onTap: () {
-            //   setState(() {
-            //     selectedGame = game;
-            //     log("selected = " + selectedGame.toString());
-
-            //     // To remove the previously selected detail page
-            //     while (Navigator.of(context).canPop()) {
-            //       Navigator.of(context).pop();
-            //     }
-            //     Navigator.of(context)
-            //         .push(DetailRoute(builder: (context) {
-            //       return DetailPage(feed: selectedGame);
-            //     }));
-            //   });
-            // }
-            );
-        })
+      child: listView
     );
   }
   
   @override
   void initState() {
     super.initState();
+    log("initState-----");
     this.getGames();
   }
 }
@@ -235,21 +294,6 @@ class DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    log("url=" + feed["entry_url"]);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(feed["entry_url"]),
-        leading: BackButton(
-          color: Colors.white,
-        ),
-      ),
-      body: WebView(
-        initialUrl: feed["entry_url"],
-        javaScriptMode: JavaScriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webViewController) {
-          print("Created!");
-        },
-      ),
-    );
+    return Container();
   }
 }

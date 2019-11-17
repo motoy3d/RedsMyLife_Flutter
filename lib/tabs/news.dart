@@ -5,7 +5,8 @@ import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import "package:intl/intl.dart";
 import 'dart:convert';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappbrowser/flutter_inappbrowser.dart';
+import 'package:redsmylife/utils.dart';
 
 /*
  * ニュースタブ
@@ -16,11 +17,12 @@ class NewsTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(int.parse(GlobalConfiguration().getString("mainColor"))),
+        titleSpacing: 0.0,
         // Set the TabBar view as the body of the Scaffold
         title: Text('ニュース', 
           style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
         leading: Icon(Icons.search),
-        actions: [Icon(Icons.settings)]
+        actions: [Padding(padding: EdgeInsets.fromLTRB(0, 0, 20, 0), child: Icon(Icons.settings))]
       ),
       body: SafeArea(
         top: false,
@@ -117,22 +119,13 @@ class MasterPageState extends State<MasterPage> with AutomaticKeepAliveClientMix
               padding: EdgeInsets.all(4.0),
               child: Text(
                 feed["site_name"] + "  " + pubDate,
-                style: TextStyle(color: Colors.grey, fontSize: 15),
+                style: TextStyle(color: Colors.grey, fontSize: 16),
                 textAlign: TextAlign.right,),
             ),
             onTap: () {
               setState(() {
                 selectedFeed = feed;
-                log("selected = " + selectedFeed.toString());
-
-                // To remove the previously selected detail page
-                while (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-                Navigator.of(context)
-                    .push(DetailRoute(builder: (context) {
-                  return DetailPage(feed: selectedFeed);
-                }));
+                Utils.openWeb(feed["entry_url"]);
               });
             });
         })
@@ -191,33 +184,4 @@ class DetailRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T> {
 
   @override
   Duration get transitionDuration => Duration(milliseconds: 250);
-}
-
-/*
- * 記事詳細画面
- */
-class DetailPage extends StatelessWidget {
-  DetailPage({Key key, @required this.feed}) : super(key: key);
-
-  final dynamic feed;
-
-  @override
-  Widget build(BuildContext context) {
-    log("url=" + feed["entry_url"]);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(feed["entry_url"]),
-        leading: BackButton(
-          color: Colors.white,
-        ),
-      ),
-      body: WebView(
-        initialUrl: feed["entry_url"],
-        javaScriptMode: JavaScriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webViewController) {
-          print("Created!");
-        },
-      ),
-    );
-  }
 }
