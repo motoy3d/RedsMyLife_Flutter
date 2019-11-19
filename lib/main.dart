@@ -57,17 +57,11 @@ class MainState extends State<Main> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Set the TabBar view as the body of the Scaffold
       body: TabBarView(
-        // Add tabs as widgets
-        children: <Widget>[NewsTab(), GamesTab(), StandingsTab(), 
-          TwitterTab(), PlayersTab()],
-        // set the controller
+        children: <Widget>[NewsTab(), GamesTab(), StandingsTab(), TwitterTab(), PlayersTab()],
         controller: controller,
       ),
-      // Set the bottom navigation bar
       bottomNavigationBar: Container(
-        // color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))),
         color: Colors.black,
         child:SafeArea(
           top: false,
@@ -79,7 +73,6 @@ class MainState extends State<Main> with SingleTickerProviderStateMixin {
             child: TabBar(
               tabs: <Tab>[
                 Tab(
-                  // set icon to the tab
                   icon: controller.index == 0? 
                     Image.asset("assets/images/news_white.png", width: 24,) :
                     Image.asset("assets/images/news_grey.png", width: 24,),
@@ -110,7 +103,6 @@ class MainState extends State<Main> with SingleTickerProviderStateMixin {
                   text: "選手+α"
                 ),
               ],
-              // setup the controller
               controller: controller,
             ),
           ),

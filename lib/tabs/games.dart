@@ -42,7 +42,7 @@ class GamesTabState extends State<GamesTab> with AutomaticKeepAliveClientMixin<G
         }
       }
       controller.animateTo(lastGameIndex * _ROW_HEIGHT, 
-        duration: new Duration(seconds: 1), curve: Curves.ease);
+        duration: new Duration(milliseconds: 500), curve: Curves.ease);
     });
     return "Successfull";
   }

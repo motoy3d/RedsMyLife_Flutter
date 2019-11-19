@@ -23,14 +23,15 @@ class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<New
   int newestItemTimestamp = 0;
   int oldestItemTimestamp = 0;
   bool isLoading = false;
+  ScrollController _scrollController;
 
   // APIからニュースデータ取得
   Future<String> getNews(String kind) async {
-    log(DateTime.now().toIso8601String() + " getNews started. kind=" + kind.toString());
     if (isLoading) {
-      log(DateTime.now().toIso8601String() + " データ読込中のためブロック");
+      log(DateTime.now().toIso8601String() + " データ読込中のためブロック kind=" + kind.toString());
       return "Now Loading";
     }
+    log(DateTime.now().toIso8601String() + " getNews started. kind=" + kind.toString());
     isLoading = true;
     try {
       // 古いデータ・最新データの読み込み条件
@@ -69,23 +70,6 @@ class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<New
         }
         log("newestItemTimestamp==" + newestItemTimestamp.toString());
         log("oldestItemTimestamp==" + oldestItemTimestamp.toString());
-        // // 最新、最古のタイムスタンプを設定
-        // int newestItemTimestamp2 = 0;
-        // int oldestItemTimestamp2 = 0;
-        // for (var entry in feeds) {
-        //   if (newestItemTimestamp2 < entry["published_date_num"]) {
-        //     newestItemTimestamp2 = entry["published_date_num"];
-        //   }
-        //   if (oldestItemTimestamp2 == 0 || entry["published_date_num"] < oldestItemTimestamp2) {
-        //     oldestItemTimestamp2 = entry["published_date_num"];
-        //   }
-        //   if (newestItemTimestamp < newestItemTimestamp2) {
-        //     newestItemTimestamp = newestItemTimestamp2;
-        //   }
-        //   if (oldestItemTimestamp2 < oldestItemTimestamp) {
-        //     oldestItemTimestamp = oldestItemTimestamp2;
-        //   }
-        // }
       });
     } finally {
       isLoading = false;
@@ -110,13 +94,14 @@ class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<New
       color: Colors.black,
       child: RefreshIndicator(
         child: new NotificationListener<ScrollNotification>(
-          onNotification: (ScrollNotification value) {
-            if (value.metrics.extentAfter == 0.0) {
-              getNews('older');
-            }
-          },
+          // onNotification: (ScrollNotification value) {
+          //   if (value.metrics.extentAfter == 0.0) {
+          //     getNews('older');
+          //   }
+          // },
           child: ListView.separated(
             separatorBuilder: (context, index) => Divider(color: Colors.grey),
+            controller: _scrollController,
             itemCount: feeds.length,
             itemBuilder: (context, index) {
               var feed = feeds[index];
@@ -185,6 +170,16 @@ class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<New
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      // Infinite loading
+      final maxScrollExtent = _scrollController.position.maxScrollExtent;
+      final currentPosition = _scrollController.position.pixels;
+      if (maxScrollExtent > 0 &&
+          (maxScrollExtent - 200.0) <= currentPosition) {
+        getNews('older');
+      }
+    });
     this.getNews(null);
   }
 }
