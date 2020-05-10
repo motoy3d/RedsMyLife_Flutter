@@ -1,17 +1,17 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import "package:intl/intl.dart";
 import 'package:global_configuration/global_configuration.dart';
 import 'dart:convert';
 import 'package:redsmylife/standings_table.dart';
 
+/// 順位表タブ
 class StandingsTab extends StatefulWidget {
   @override
-  StandingsTabState createState() => StandingsTabState();
+  _StandingsTabState createState() => _StandingsTabState();
 }
 
-class StandingsTabState extends State<StandingsTab> with AutomaticKeepAliveClientMixin<StandingsTab> {
+class _StandingsTabState extends State<StandingsTab> with AutomaticKeepAliveClientMixin<StandingsTab> {
   @override
   bool get wantKeepAlive => true;
   List standings = List();
@@ -75,7 +75,6 @@ class StandingsTabState extends State<StandingsTab> with AutomaticKeepAliveClien
           ),
         ).toList()
     );
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(int.parse(GlobalConfiguration().getString("mainColor"))),
@@ -103,15 +102,6 @@ class StandingsTabState extends State<StandingsTab> with AutomaticKeepAliveClien
         )
       )
     );
-
-    // return Container(
-    //   color: Colors.black,
-    //   // padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-    //   child: SingleChildScrollView(
-    //     scrollDirection: Axis.vertical,
-    //     child: dataTable
-    //   )
-    // );
   }
   
   @override

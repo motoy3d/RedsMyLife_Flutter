@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:global_configuration/global_configuration.dart';
 
+/// twitterタブ
 class TwitterTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

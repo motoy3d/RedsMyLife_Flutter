@@ -2,11 +2,12 @@ import 'dart:developer';
 
 import 'package:global_configuration/global_configuration.dart';
 import 'package:flutter_inappbrowser/flutter_inappbrowser.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Utils {
+  /// InAppBrowserでURLを開く
   static void openWeb(String url) {
-    log('url=' + url);
-    MyChromeSafariBrowser browser = new MyChromeSafariBrowser(InAppBrowser());
+    ChromeSafariBrowser browser = new ChromeSafariBrowser(InAppBrowser());
     browser.open(url, options: {
       "addShareButton": true,
       "barCollapsingEnabled": true,
@@ -21,24 +22,14 @@ class Utils {
       "closeButtonCaption": "閉じる"
     });
   }
-}
 
-class MyChromeSafariBrowser extends ChromeSafariBrowser {
-
-  MyChromeSafariBrowser(browserFallback) : super(browserFallback);
-
-  @override
-  void onOpened() {
-    print("ChromeSafari browser opened");
-  }
-
-  @override
-  void onLoaded() {
-    print("ChromeSafari browser loaded");
-  }
-
-  @override
-  void onClosed() {
-    print("ChromeSafari browser closed");
+  static void launchUrl(String url) async {
+    log('launchUrl. $url');
+    if (await canLaunch(url)) {
+      var result = await launch(url);
+      log('result=$result');
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

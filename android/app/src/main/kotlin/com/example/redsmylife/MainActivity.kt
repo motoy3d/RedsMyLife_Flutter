@@ -1,4 +1,4 @@
-package com.example.redsmylife
+package com.redsmylife
 
 import android.os.Bundle
 

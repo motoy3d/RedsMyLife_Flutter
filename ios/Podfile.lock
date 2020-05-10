@@ -2,27 +2,45 @@ PODS:
   - Flutter (1.0.0)
   - flutter_inappbrowser (0.0.1):
     - Flutter
-  - webview_flutter (0.0.1):
+  - share (0.0.1):
+    - Flutter
+  - url_launcher (0.0.1):
+    - Flutter
+  - url_launcher_macos (0.0.1):
+    - Flutter
+  - url_launcher_web (0.0.1):
     - Flutter
 
 DEPENDENCIES:
-  - Flutter (from `.symlinks/flutter/ios`)
+  - Flutter (from `Flutter`)
   - flutter_inappbrowser (from `.symlinks/plugins/flutter_inappbrowser/ios`)
-  - webview_flutter (from `.symlinks/plugins/webview_flutter/ios`)
+  - share (from `.symlinks/plugins/share/ios`)
+  - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+  - url_launcher_macos (from `.symlinks/plugins/url_launcher_macos/ios`)
+  - url_launcher_web (from `.symlinks/plugins/url_launcher_web/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
-    :path: ".symlinks/flutter/ios"
+    :path: Flutter
   flutter_inappbrowser:
     :path: ".symlinks/plugins/flutter_inappbrowser/ios"
-  webview_flutter:
-    :path: ".symlinks/plugins/webview_flutter/ios"
+  share:
+    :path: ".symlinks/plugins/share/ios"
+  url_launcher:
+    :path: ".symlinks/plugins/url_launcher/ios"
+  url_launcher_macos:
+    :path: ".symlinks/plugins/url_launcher_macos/ios"
+  url_launcher_web:
+    :path: ".symlinks/plugins/url_launcher_web/ios"
 
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_inappbrowser: 93214ba3c0bc9db42e879f808d993b6d3be32379
-  webview_flutter: db3aba222b23e4dc432e0c5882834123dc50ff9f
+  share: 0b2c3e82132f5888bccca3351c504d0003b3b410
+  url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
+  url_launcher_macos: fd7894421cd39320dce5f292fc99ea9270b2a313
+  url_launcher_web: e5527357f037c87560776e36436bf2b0288b965c
 
-PODFILE CHECKSUM: 10ae9c18d12c9ffc2275c9a159a3b1e281990db0
+PODFILE CHECKSUM: 1b66dae606f75376c5f2135a8290850eeb09ae83
 
-COCOAPODS: 1.7.5
+COCOAPODS: 1.9.1

@@ -6,16 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:redsmylife/utils.dart';
 import 'dart:convert';
 
-/*
- * 日程タブ
- */
+/// 日程タブ
 class GamesTab extends StatefulWidget {
   @override
-  GamesTabState createState() => GamesTabState();
+  _GamesTabState createState() => _GamesTabState();
 }
 
 const double _ROW_HEIGHT = 165.0;
-class GamesTabState extends State<GamesTab> with AutomaticKeepAliveClientMixin<GamesTab> {
+class _GamesTabState extends State<GamesTab> with AutomaticKeepAliveClientMixin<GamesTab> {
   @override
   bool get wantKeepAlive => true;
   List games = List();
@@ -51,7 +49,7 @@ class GamesTabState extends State<GamesTab> with AutomaticKeepAliveClientMixin<G
   Widget build(BuildContext context) {
     super.build(context);
     controller = ScrollController();
-    log("build ------- ");
+    log("games build ------- ");
     listView = ListView.separated(
       separatorBuilder: (context, index) => Divider(color: Colors.grey),
       itemCount: games.length,
@@ -204,9 +202,7 @@ class GamesTabState extends State<GamesTab> with AutomaticKeepAliveClientMixin<G
   }
 }
 
-/*
- * 記事詳細用ルート
- */
+/// 記事詳細用ルート
 class DetailRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T> {
   DetailRoute({@required WidgetBuilder this.builder, RouteSettings settings})
       : super(settings: settings);
@@ -230,8 +226,8 @@ class DetailRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T> {
   }
 
   @override
-  void install(OverlayEntry insertionPoint) {
-    super.install(insertionPoint);
+  void install() {
+    super.install();
   }
 
   @override
@@ -251,9 +247,7 @@ class DetailRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T> {
   Duration get transitionDuration => Duration(milliseconds: 250);
 }
 
-/*
- * 記事詳細画面
- */
+/// 記事詳細画面
 class DetailPage extends StatelessWidget {
   DetailPage({Key key, @required this.feed}) : super(key: key);
 

@@ -4,149 +4,148 @@ import 'package:flutter/material.dart';
 import 'package:global_configuration/global_configuration.dart';
 import 'package:http/http.dart' as http;
 import "package:intl/intl.dart";
+import 'package:redsmylife/pages/settings.dart';
 import 'dart:convert';
 import 'package:redsmylife/utils.dart';
 
-/*
- * ニュースタブ
- */
+/// ニュースタブ
 class NewsTab extends StatefulWidget {
   @override
-  NewsTabState createState() => NewsTabState();
+  _NewsTabState createState() => _NewsTabState();
 }
 
-class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<NewsTab> {
+class _NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<NewsTab> {
+  /// AutomaticKeepAliveClientMixinとwantKeepAliveで、タブ移動時に状態を維持させる
   @override
   bool get wantKeepAlive => true;
-  List feeds = List();
-  dynamic selectedFeed;
-  int newestItemTimestamp = 0;
-  int oldestItemTimestamp = 0;
-  bool isLoading = false;
+  List _feeds = List();
+  ListView _listView;
+  dynamic _selectedFeed;
+  int _newestItemTimestamp = 0;
+  int _oldestItemTimestamp = 0;
+  bool _isLoading = false;
   ScrollController _scrollController;
 
-  // APIからニュースデータ取得
-  Future<String> getNews(String kind) async {
-    if (isLoading) {
-      log(DateTime.now().toIso8601String() + " データ読込中のためブロック kind=" + kind.toString());
-      return "Now Loading";
+  /// APIからニュースデータ取得
+  Future<void> getNews(String kind) async {
+    if (_isLoading) {
+      log(DateTime.now().toString() + " データ読込中のためブロック kind=" + kind.toString());
+      return;
     }
-    log(DateTime.now().toIso8601String() + " getNews started. kind=" + kind.toString());
-    isLoading = true;
+    log(DateTime.now().toString() + " getNews started. kind=" + kind.toString());
+    _isLoading = true;
+    // await Future.delayed(Duration(seconds: 3)); //non blocking
     try {
       // 古いデータ・最新データの読み込み条件
       var condition = "";
       if('older' == kind) {
-        condition = "&max=" + oldestItemTimestamp.toString();
+        condition = "&max=" + _oldestItemTimestamp.toString();
       } else if('newer' == kind) {
-        condition = "&min=" + newestItemTimestamp.toString();
+        condition = "&min=" + _newestItemTimestamp.toString();
       }
       var url = Uri.encodeFull(GlobalConfiguration().getString("feedUrlBase"))
         + "?teamId=" + GlobalConfiguration().getString("teamId")
         + "&count=" + GlobalConfiguration().getString("newsEntriesPerPage")
         + condition;
-      log("url=" + url);
+      // log("url=" + url);
       var response = await http.get(url, headers: {"Accept": "application/json"});
-      log(response.body);
-      setState(() {
-        var feedsFromApi = json.decode(response.body);
-        if (feedsFromApi == null) {
-          return;
-        }
-        log(DateTime.now().toIso8601String() + " kind ==== " + kind.toString());
-        if (kind == null) { //初回
-          feeds.addAll(feedsFromApi);
-          log(feeds.length.toString() + "件");
-          newestItemTimestamp = feedsFromApi[0]["published_date_num"];
-          oldestItemTimestamp = feedsFromApi[feedsFromApi.length-1]["published_date_num"];
-        } else if (kind == "older") { //load more
-          feeds.addAll(feedsFromApi);
-          log(feeds.length.toString() + "件");
-          oldestItemTimestamp = feedsFromApi[feedsFromApi.length-1]["published_date_num"];
-        } else if (kind == "newer") { //pull to refresh
-          feeds.insertAll(0, feedsFromApi);
-          log(feeds.length.toString() + "件");
-          newestItemTimestamp = feedsFromApi[0]["published_date_num"];
-        }
-        log("newestItemTimestamp==" + newestItemTimestamp.toString());
-        log("oldestItemTimestamp==" + oldestItemTimestamp.toString());
-      });
+      // log("★response.body=" + response.body);
+      if (response.body != null && response.body != "[{\"json\":\"no data\"}]") {
+        setState(() {
+          var feedsFromApi = json.decode(response.body);
+          log(DateTime.now().toString() + " kind ==== " + kind.toString());
+          if (kind == null) { //初回
+            _feeds.addAll(feedsFromApi);
+            _newestItemTimestamp = feedsFromApi[0]["published_date_num"];
+            _oldestItemTimestamp = feedsFromApi[feedsFromApi.length-1]["published_date_num"];
+          } else if (kind == "older") { //load more
+            _feeds.addAll(feedsFromApi);
+            _oldestItemTimestamp = feedsFromApi[feedsFromApi.length-1]["published_date_num"];
+          } else if (kind == "newer") { //pull to refresh
+            _feeds.insertAll(0, feedsFromApi);
+            _newestItemTimestamp = feedsFromApi[0]["published_date_num"];
+          }
+        });
+      }
     } finally {
-      isLoading = false;
+      _isLoading = false;
     }
-    return "Successfull";
   }
 
-  // Pull to refresh
+  /// Pull to refresh
   Future<void> _refresh() {
-    return Future.sync(() {
-      setState(() {
-        log("refresh");
-        getNews('newer');
-      });
-    });
+    return getNews('newer');
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    log('>>>>>>>>>>>>>>>>>>>>>>> news build');
+    _listView = ListView.separated(
+      separatorBuilder: (context, index) => Divider(color: Colors.grey),
+      controller: _scrollController,
+      itemCount: 0 < _feeds.length? _feeds.length + 1 : 0,
+      itemBuilder: (context, index) {
+        // log("index=" + index.toString() + ", feeds.length=" + feeds.length.toString());
+        // 最後の行はインジケータ
+        if (index == _feeds.length) {
+          return new Center(
+            child: new Container(
+              margin: const EdgeInsets.only(top: 12.0, bottom: 12.0),
+              width: 32.0,
+              height: 32.0,
+              child: const CircularProgressIndicator(),
+            ),
+          );
+        } else {
+          var feed = _feeds[index];
+          var pubDate = feed["published_date"] != null? DateFormat("yyyy/MM/dd HH:mm").format(
+            DateTime.parse(feed["published_date"].replaceAll("/", "-"))) : "";
+
+          // log('---------------------');
+          // log(feed["image_url"].toString() + ("  ") + feed["image_width"].toString() + ("/") + feed["image_height"].toString());
+          // log("entry=" + feed.toString());
+          return ListTile(
+            contentPadding: EdgeInsets.all(8.0),
+            selected: feed == _selectedFeed,
+            title: Row(
+              children: [
+                // イメージ
+                feed["image_url"] != ""? 
+                  Padding(
+                    padding: EdgeInsets.all(4.0),
+                    child: Image.network(
+                      feed["image_url"], 
+                      width: 240.0,
+                      fit: BoxFit.fitWidth)
+                    ) : Container(),
+                // タイトル
+                Flexible( //テキスト折返し用
+                  child: Text(
+                    feed["entry_title"], 
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
+                ),
+              ]),
+            // サブタイトル(サイト名、公開日時)
+            subtitle: Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Text(
+                feed["site_name"] + "  " + pubDate,
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+                textAlign: TextAlign.right,),
+            ),
+            onTap: () {
+              setState(() {
+                _selectedFeed = feed;
+                Utils.openWeb(feed["entry_url"]);
+              });
+            });
+        }
+      });
     var container = Container(
       color: Colors.black,
       child: RefreshIndicator(
-        child: new NotificationListener<ScrollNotification>(
-          // onNotification: (ScrollNotification value) {
-          //   if (value.metrics.extentAfter == 0.0) {
-          //     getNews('older');
-          //   }
-          // },
-          child: ListView.separated(
-            separatorBuilder: (context, index) => Divider(color: Colors.grey),
-            controller: _scrollController,
-            itemCount: feeds.length,
-            itemBuilder: (context, index) {
-              var feed = feeds[index];
-              var pubDate = DateFormat("yyyy/MM/dd HH:mm").format(
-                DateTime.parse(feed["published_date"].replaceAll("/", "-")));
-
-              // log('---------------------');
-              // log(feed["image_url"] + "  " + feed["image_width"].toString() + "/" + feed["image_height"].toString());
-              return ListTile(
-                contentPadding: EdgeInsets.all(8.0),
-                selected: feed == selectedFeed,
-                title: Row(
-                  children: [
-                    // イメージ
-                    feed["image_width"] !=0? 
-                      Padding(
-                        padding: EdgeInsets.all(4.0),
-                        child: Image.network(
-                          feed["image_url"], 
-                          width: 240.0,
-                          fit: BoxFit.fitWidth)
-                        ) : Container(),
-                    // タイトル
-                    Flexible( //テキスト折返し用
-                      child: Text(
-                        feed["entry_title"], 
-                        style: TextStyle(color: Colors.white, fontSize: 18)),
-                    ),
-                  ]),
-                // サブタイトル(サイト名、公開日時)
-                subtitle: Padding(
-                  padding: EdgeInsets.all(4.0),
-                  child: Text(
-                    feed["site_name"] + "  " + pubDate,
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                    textAlign: TextAlign.right,),
-                ),
-                onTap: () {
-                  setState(() {
-                    selectedFeed = feed;
-                    Utils.openWeb(feed["entry_url"]);
-                  });
-                });
-            })
-        )
+        child: _listView
         ,onRefresh: _refresh,
       )
     );
@@ -157,7 +156,20 @@ class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<New
         title: Text('ニュース', 
           style: TextStyle(color: Color(int.parse(GlobalConfiguration().getString("mainFontColor"))))),
         leading: Icon(Icons.search),
-        actions: [Padding(padding: EdgeInsets.fromLTRB(0, 0, 10, 0), child: Icon(Icons.settings))]
+        actions: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 10, 0), 
+            child: IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
+              },
+              ),
+          )
+        ]
       ),
       body: SafeArea(
         top: false,
@@ -182,51 +194,4 @@ class NewsTabState extends State<NewsTab> with AutomaticKeepAliveClientMixin<New
     });
     this.getNews(null);
   }
-}
-
-/*
- * 記事詳細用ルート
- */
-class DetailRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T> {
-  DetailRoute({@required WidgetBuilder this.builder, RouteSettings settings})
-      : super(settings: settings);
-
-  final WidgetBuilder builder;
-
-  @override
-  Iterable<OverlayEntry> createOverlayEntries() {
-    return [
-      OverlayEntry(builder: (context) {
-        return Positioned(
-          left: 0,
-          top: 0,
-          child: SizedBox(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width,
-              child: builder(context)
-          ));
-      })
-    ];
-  }
-
-  @override
-  void install(OverlayEntry insertionPoint) {
-    super.install(insertionPoint);
-  }
-
-  @override
-  bool didPop(T result) {
-    final bool returnValue = super.didPop(result);
-    assert(returnValue);
-    if (finishedWhenPopped) {
-      navigator.finalizeRoute(this);
-    }
-    return returnValue;
-  }
-
-  @override
-  bool get opaque => false;
-
-  @override
-  Duration get transitionDuration => Duration(milliseconds: 250);
 }
